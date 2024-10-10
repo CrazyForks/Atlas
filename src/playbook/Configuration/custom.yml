@@ -12,7 +12,7 @@ actions:
 
       $count = 1
       $prefix = 'HKU\AME_UserHive_'
-      foreach ($hive in (Get-ChildItem -Path $usersPath -Force -Depth 1 | ? { $_.Name -eq 'NTUSER.DAT' })) {
+      foreach ($hive in (Get-ChildItem -Path $usersPath -Force -Depth 1 | ? { ($_.Name -eq 'NTUSER.DAT') -and ($_.Directory.Name -notlike 'defaultuser*')})) {
           if (!$defaultFound -and ($hive.Directory.FullName -eq $defaultPath)) {
               $defaultFound = $true
               $name = """$prefix""" + """Default"""
@@ -46,12 +46,13 @@ actions:
     handleExitCodes: {'!0': halt}
 
     # Prevent annoying notifications during deployment
-  - !taskKill: {name: 'explorer'}
   - !cmd:
     command: 'DISABLENOTIFS.cmd'
     exeDir: true
     wait: true
     runas: currentUserElevated
+  - !taskKill: {name: 'explorer'}
+  - !taskKill: {name: 'ShellExperienceHost'}
   - !run: {exe: 'explorer.exe', runas: 'currentUser', wait: false}
 
   # Configure PowerShell first so that other PowerShell scripts work
